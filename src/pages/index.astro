@@ -21,13 +21,70 @@ const games = await getAllGames(getDatabase());
     <div>
       <h2 class="text-2xl font-medium mb-6 text-slate-100">Featured Games</h2>
 
+      {games.length > 0 && (
+        <div class="mb-6">
+          <label for="game-search" class="block text-sm font-medium text-slate-200 mb-2">
+            Search games by title
+          </label>
+          <input
+            id="game-search"
+            type="search"
+            placeholder="Search by title"
+            class="w-full rounded-lg border border-slate-600 bg-slate-800 px-4 py-3 text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            data-testid="game-search-input"
+            aria-describedby="game-search-status"
+          />
+          <p id="game-search-status" class="mt-2 text-sm text-slate-400" role="status" aria-live="polite" data-testid="game-search-status">
+            Showing {games.length} games
+          </p>
+        </div>
+      )}
+
       {games.length === 0 ? (
         <EmptyState text="No games available at the moment." />
       ) : (
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" data-testid="games-grid">
+        <div id="games-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" data-testid="games-grid">
           {games.map((game) => <GameCard game={game} />)}
+        </div>
+      )}
+
+      {games.length > 0 && (
+        <div id="game-search-empty" class="hidden" data-testid="game-search-empty">
+          <EmptyState text="No games match your search." />
         </div>
       )}
     </div>
   </div>
 </Layout>
+
+<script>
+  const searchInput = document.querySelector<HTMLInputElement>('#game-search');
+  const searchStatus = document.querySelector<HTMLElement>('#game-search-status');
+  const searchEmptyState = document.querySelector<HTMLElement>('#game-search-empty');
+  const gameCards = Array.from(document.querySelectorAll<HTMLElement>('[data-testid="game-card"]'));
+
+  searchInput?.addEventListener('input', () => {
+    const query = searchInput.value.trim().toLocaleLowerCase();
+    let visibleCount = 0;
+
+    gameCards.forEach((card) => {
+      const title = card.dataset.gameTitle?.toLocaleLowerCase() ?? '';
+      const isMatch = query.length === 0 || title.includes(query);
+      card.hidden = !isMatch;
+      if (isMatch) {
+        visibleCount += 1;
+      }
+    });
+
+    if (searchEmptyState) {
+      searchEmptyState.classList.toggle('hidden', visibleCount > 0);
+    }
+
+    if (searchStatus) {
+      searchStatus.textContent =
+        visibleCount === 0
+          ? 'No games match your search.'
+          : `Showing ${visibleCount} game${visibleCount === 1 ? '' : 's'}`;
+    }
+  });
+</script>
