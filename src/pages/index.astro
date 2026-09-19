@@ -24,10 +24,83 @@ const games = await getAllGames(getDatabase());
       {games.length === 0 ? (
         <EmptyState text="No games available at the moment." />
       ) : (
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" data-testid="games-grid">
-          {games.map((game) => <GameCard game={game} />)}
-        </div>
+        <>
+          <form
+            class="mb-8 max-w-xl"
+            data-testid="game-search-form"
+            role="search"
+          >
+            <label for="game-search" class="mb-2 block text-sm font-medium text-slate-200">
+              Search games by title
+            </label>
+            <input
+              id="game-search"
+              name="search"
+              type="search"
+              placeholder="Search by game title"
+              autocomplete="off"
+              aria-controls="games-grid"
+              data-testid="game-search-input"
+              class="w-full rounded-lg border border-slate-600 bg-slate-800 px-4 py-3 text-slate-100 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </form>
+
+          <p
+            class="mb-4 text-sm text-slate-400"
+            data-testid="game-search-status"
+            aria-live="polite"
+          >
+            Showing {games.length} {games.length === 1 ? 'game' : 'games'}
+          </p>
+
+          <div id="games-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" data-testid="games-grid">
+            {games.map((game) => <GameCard game={game} />)}
+          </div>
+
+          <div class="hidden" data-testid="search-empty-state">
+            <EmptyState text="No games match your search." />
+          </div>
+        </>
       )}
     </div>
   </div>
 </Layout>
+
+<script>
+  import { gameTitleMatches } from '../lib/search';
+
+  const form = document.querySelector<HTMLFormElement>('[data-testid="game-search-form"]');
+  const input = document.querySelector<HTMLInputElement>('[data-testid="game-search-input"]');
+  const grid = document.querySelector<HTMLElement>('[data-testid="games-grid"]');
+  const emptyState = document.querySelector<HTMLElement>('[data-testid="search-empty-state"]');
+  const status = document.querySelector<HTMLElement>('[data-testid="game-search-status"]');
+  const cards = Array.from(document.querySelectorAll<HTMLElement>('[data-testid="game-card"]'));
+  const gameTitles = cards.map((card) => ({
+    card,
+    title: card.dataset.gameTitle ?? '',
+  }));
+
+  function updateResults(query: string): void {
+    const visibleCount = gameTitles.reduce((count, game) => {
+      const isMatch = gameTitleMatches(game.title, query);
+      game.card.hidden = !isMatch;
+      return count + (isMatch ? 1 : 0);
+    }, 0);
+
+    if (grid) {
+      grid.hidden = visibleCount === 0;
+    }
+    if (emptyState) {
+      emptyState.classList.toggle('hidden', visibleCount !== 0);
+    }
+    if (status) {
+      status.textContent = `Showing ${visibleCount} ${visibleCount === 1 ? 'game' : 'games'}`;
+    }
+  }
+
+  form?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    updateResults(input?.value ?? '');
+  });
+  input?.addEventListener('input', () => updateResults(input.value));
+</script>
