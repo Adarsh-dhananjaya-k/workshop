@@ -1,6 +1,32 @@
 import { test, expect, type Response } from '@playwright/test';
 
 test.describe('Game Listing and Navigation', () => {
+  test('should filter games by title as the user types', async ({ page }) => {
+    await page.goto('/');
+
+    const searchInput = page.getByTestId('game-search-input');
+    const gameCards = page.getByTestId('game-card');
+    await expect(searchInput).toBeVisible();
+
+    const firstTitle = await gameCards.first().getAttribute('data-game-title');
+    expect(firstTitle).not.toBeNull();
+    const searchTerm = firstTitle?.slice(0, 4).toUpperCase() ?? '';
+
+    await searchInput.fill(searchTerm);
+
+    await expect(page.locator('[data-testid="game-card"]:visible')).toHaveCount(1);
+    await expect(page.getByTestId('game-search-status')).toContainText('Showing 1 game');
+  });
+
+  test('should show an empty state when no games match the search', async ({ page }) => {
+    await page.goto('/');
+
+    await page.getByTestId('game-search-input').fill('no matching game title');
+
+    await expect(page.getByTestId('game-search-empty')).toBeVisible();
+    await expect(page.getByTestId('game-search-status')).toHaveText('No games match your search.');
+  });
+
   test('should display games with titles on index page', async ({ page }) => {
     await test.step('Navigate to homepage', async () => {
       await page.goto('/');

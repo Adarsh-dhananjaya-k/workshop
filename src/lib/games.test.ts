@@ -3,6 +3,7 @@ import { createTestDatabase } from '../../db/test-helpers';
 import { categories, publishers, games } from '../../db/schema';
 import type { Database } from './db';
 import {
+    filterGamesByTitle,
     getAllGames,
     getAllGameIds,
     getGameById,
@@ -62,5 +63,38 @@ describe('games data-access helpers', () => {
     it('returns null for a non-existent game', async () => {
         await seedGames(db, 2);
         expect(await getGameById(db, 99999)).toBeNull();
+    });
+});
+
+describe('filterGamesByTitle', () => {
+    const gamesToFilter = [
+        {
+            id: 1,
+            title: 'Code Quest',
+            description: 'A coding adventure',
+            starRating: 4.5,
+            category: null,
+            publisher: null,
+        },
+        {
+            id: 2,
+            title: 'Garden Galaxy',
+            description: 'A peaceful strategy game',
+            starRating: null,
+            category: null,
+            publisher: null,
+        },
+    ];
+
+    it('returns games containing a case-insensitive title match', () => {
+        expect(filterGamesByTitle(gamesToFilter, ' QUEST ')).toEqual([gamesToFilter[0]]);
+    });
+
+    it('returns all games for an empty query', () => {
+        expect(filterGamesByTitle(gamesToFilter, '   ')).toBe(gamesToFilter);
+    });
+
+    it('returns an empty list when no titles match', () => {
+        expect(filterGamesByTitle(gamesToFilter, 'unknown')).toEqual([]);
     });
 });

@@ -42,6 +42,19 @@ function mapGame(row: GameSelectionRow): Game {
     };
 }
 
+/** Filters games whose titles contain the query, ignoring case and surrounding whitespace. */
+export function filterGamesByTitle(gamesToFilter: Game[], query: string): Game[] {
+    const normalizedQuery = query.trim().toLocaleLowerCase();
+
+    if (normalizedQuery.length === 0) {
+        return gamesToFilter;
+    }
+
+    return gamesToFilter.filter((game) =>
+        game.title.toLocaleLowerCase().includes(normalizedQuery),
+    );
+}
+
 function baseGamesQuery(db: Database) {
     return db
         .select(gameSelection)
