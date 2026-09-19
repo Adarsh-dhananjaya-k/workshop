@@ -58,7 +58,9 @@ const games = await getAllGames(getDatabase());
           </div>
 
           <div class="hidden" data-testid="search-empty-state">
-            <EmptyState text="No games match your search." />
+            <div data-testid="game-search-empty">
+              <EmptyState text="No games match your search." />
+            </div>
           </div>
         </>
       )}
@@ -94,7 +96,10 @@ const games = await getAllGames(getDatabase());
       emptyState.classList.toggle('hidden', visibleCount !== 0);
     }
     if (status) {
-      status.textContent = `Showing ${visibleCount} ${visibleCount === 1 ? 'game' : 'games'}`;
+      status.textContent =
+        visibleCount === 0
+          ? 'No games match your search.'
+          : `Showing ${visibleCount} ${visibleCount === 1 ? 'game' : 'games'}`;
     }
   }
 

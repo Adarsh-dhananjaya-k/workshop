@@ -44,6 +44,6 @@ test.describe('Home Page', () => {
 
     await expect(page.getByTestId('search-empty-state')).toBeVisible();
     await expect(page.getByTestId('empty-state-text')).toHaveText('No games match your search.');
-    await expect(page.getByTestId('game-search-status')).toHaveText('Showing 0 games');
+    await expect(page.getByTestId('game-search-status')).toHaveText('No games match your search.');
   });
 });
